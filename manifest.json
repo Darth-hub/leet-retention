@@ -22,10 +22,9 @@
     }
   ],
   "action": {
-    "default_popup": "src/popup/popup.html",
-    "default_icon": "icons/icon48.png"
-  },
+    "default_popup": "src/popup/popup.html"
 
+  },
   "web_accessible_resources": [
   {
     "resources": ["src/content/interceptor.js"],

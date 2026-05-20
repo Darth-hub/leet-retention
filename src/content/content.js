@@ -1,14 +1,14 @@
 import {
   fetchProgressList,
   fetchProgressSummary,
-} from "./services/leetcode.js";
+} from "../services/leetcode.js";
 const STORAGE_KEY = "leetcodeData";
 /* ---------------- INJECT INTERCEPTOR ---------------- */
 const script =
   document.createElement("script");
 script.src =
   chrome.runtime.getURL(
-    "interceptor.js"
+    "src/content/interceptor.js"
   );
 document.documentElement.appendChild(
   script

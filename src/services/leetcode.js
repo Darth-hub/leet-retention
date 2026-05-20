@@ -1,4 +1,21 @@
-const LEETCODE_API = "https://leetcode.com/graphql/";
+const LEETCODE_API =
+  "https://leetcode.com/graphql/";
+function getHeaders() {
+  const csrfToken = document.cookie
+    .split("; ")
+    .find((row) =>
+      row.startsWith("csrftoken=")
+    )
+    ?.split("=")[1];
+  return {
+    "Content-Type":
+      "application/json",
+    "x-csrftoken":
+      csrfToken,
+    "random-uuid":
+      crypto.randomUUID(),
+  };
+}
 export async function fetchProgressList() {
   const query = `
     query userProgressQuestionList(
@@ -12,7 +29,6 @@ export async function fetchProgressList() {
           title
           titleSlug
           difficulty
-          status
           numSubmitted
           lastSubmittedAt
           topicTags {
@@ -33,10 +49,7 @@ export async function fetchProgressList() {
         LEETCODE_API,
         {
           method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+          headers: getHeaders(),
           credentials: "include",
           body: JSON.stringify({
             operationName:
@@ -104,10 +117,7 @@ export async function fetchProgressSummary() {
       LEETCODE_API,
       {
         method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
+        headers: getHeaders(),
         credentials: "include",
         body: JSON.stringify({
           operationName:
@@ -133,7 +143,8 @@ export async function fetchProgressSummary() {
       data.data
         .userProgressQuestionList;
     return {
-      totalNum: result.totalNum,
+      totalNum:
+        result.totalNum,
       lastSubmittedAt:
         result.questions[0]
           ?.lastSubmittedAt,

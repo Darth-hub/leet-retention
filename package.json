@@ -1,1 +1,13 @@
-{}
+{
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^8.0.13",
+    "vite-plugin-web-extension": "^4.5.1"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.1"
+  }
+}
