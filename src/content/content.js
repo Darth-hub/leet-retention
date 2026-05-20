@@ -3,6 +3,42 @@ import {
   fetchProgressSummary,
 } from "./services/leetcode.js";
 const STORAGE_KEY = "leetcodeData";
+/* ---------------- INJECT INTERCEPTOR ---------------- */
+const script =
+  document.createElement("script");
+script.src =
+  chrome.runtime.getURL(
+    "interceptor.js"
+  );
+document.documentElement.appendChild(
+  script
+);
+script.onload = () => script.remove();
+
+/* ---------------- MESSAGE LISTENER ---------------- */
+window.addEventListener(
+  "message",
+  async (event) => {
+    if (
+      event.source !== window
+    ) {
+      return;
+    }
+    if (
+      event.data?.type !==
+      "LEET_RETENTION_SUBMISSION"
+    ) {
+      return;
+    }
+    console.log(
+      "Submission captured:",
+      event.data.payload
+    );
+    // TODO:
+    // Update SM-2 scheduling here
+  }
+);
+/* ---------------- CACHE VALIDATION ---------------- */
 async function shouldRefetch() {
   const storedData =
     await chrome.storage.local.get(
@@ -25,6 +61,7 @@ async function shouldRefetch() {
       cached.lastSubmittedAt
   );
 }
+/* ---------------- DATA SYNC ---------------- */
 async function syncData() {
   try {
     const {
@@ -53,6 +90,7 @@ async function syncData() {
     return null;
   }
 }
+/* ---------------- INITIALIZATION ---------------- */
 async function init() {
   const needsRefetch =
     await shouldRefetch();
@@ -75,3 +113,6 @@ async function init() {
   }
 }
 init();
+
+
+this is the final content.js script

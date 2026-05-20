@@ -24,5 +24,12 @@
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": "icons/icon48.png"
+  },
+
+  "web_accessible_resources": [
+  {
+    "resources": ["src/content/interceptor.js"],
+    "matches": ["https://leetcode.com/*"]
   }
+]
 }
