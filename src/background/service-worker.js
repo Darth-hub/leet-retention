@@ -5,8 +5,8 @@ import {
 } from "../services/sm2.js";
 
 const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL
-  process.env.SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.SUPABASE_ANON_KEY
 );
 chrome.runtime.onMessage.addListener(
   (message, sender, sendResponse) => {
