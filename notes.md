@@ -374,3 +374,16 @@ new Date(...)
 converts timestamp into actual Date object.
 
 
+
+
+
+
+### Schemas
+
+## User
+
+1. users
+
+```Stores identity + global settings.```
+
+
