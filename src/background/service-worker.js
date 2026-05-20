@@ -6,7 +6,7 @@ import {
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 chrome.runtime.onMessage.addListener(
   (message, sender, sendResponse) => {
@@ -34,7 +34,7 @@ async function handleNewSubmission(submission) {
   const { data: existing } = await supabase
     .from("problem_retention")
     .select("id, stability, review_count, num_submitted")
-    .eq("question_id", question.questionId)
+    .eq("question_id", question.titleSlug)
     .single();
 
   const numSubmitted = existing?.num_submitted ?? 1;
@@ -55,7 +55,7 @@ async function handleNewSubmission(submission) {
     await supabase
       .from("problem_retention")
       .insert({
-        question_id: question.questionId,
+        question_id: question.titleSlug,
         title_slug: question.titleSlug,
         stability: initialS,
         next_review_at: nextReviewDate,
