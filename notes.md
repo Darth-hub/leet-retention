@@ -377,13 +377,19 @@ converts timestamp into actual Date object.
 
 
 
+### Question
 
-### Schemas
+service-worker.js.
+This file has two responsibilities:
 
-## User
+Sync retention data to Supabase — when content.js captures a new submission, service worker saves it to the problem_retention table
+Schedule review alarms — uses chrome.alarms to notify user when problems are due
 
-1. users
+Before you write anything — how does content.js communicate with service-worker.js? They're in different contexts. What Chrome API handles messaging between them?
 
-```Stores identity + global settings.```
+## Answer
 
+chrome.runtime.sendMessage()
+and receive through
+chrome.runtime.onMessage.addListener()
 
