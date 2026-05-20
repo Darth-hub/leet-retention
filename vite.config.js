@@ -6,7 +6,11 @@ export default defineConfig({
     webExtension({
       manifest: "manifest.json",
       additionalInputs: [
-        "src/content/interceptor.js"
+        "src/content/interceptor.js",
+        "src/popup/popup.html",
+        "src/popup/review.html",
+        "src/popup/stats-popup.html",
+        "src/popup/stats.html",
       ],
     }),
   ],
