@@ -115,4 +115,3 @@ async function init() {
 init();
 
 
-this is the final content.js script
