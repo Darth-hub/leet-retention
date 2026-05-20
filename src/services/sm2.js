@@ -35,5 +35,23 @@ export function computeNextReviewDate(
     Date.now() + currentS * 24 * 60 * 60 * 1000);
 }
 
-
-
+export function initializeRetentionData(questions) {
+  return questions.map((question) => {
+    const stability = computeInitialS(
+      question.numSubmitted,
+      question.difficulty
+    );
+    const nextReviewDate = computeNextReviewDate(stability);
+    return {
+      question_id: question.titleSlug, 
+      title_slug: question.titleSlug,
+      difficulty: question.difficulty,
+      stability,
+      next_review_at: nextReviewDate,
+      num_submitted: question.numSubmitted,
+      review_count: 0,
+      topic_tags: question.topicTags,
+      last_submitted_at: question.lastSubmittedAt,
+    };
+  });
+}

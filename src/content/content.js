@@ -1,44 +1,8 @@
 import {
-  fetchProgressList,
-  fetchProgressSummary,
-} from "../services/leetcode.js";
-const STORAGE_KEY = "leetcodeData";
-/* ---------------- INJECT INTERCEPTOR ---------------- */
-const script =
-  document.createElement("script");
-script.src =
-  chrome.runtime.getURL(
-    "src/content/interceptor.js"
-  );
-document.documentElement.appendChild(
-  script
-);
-script.onload = () => script.remove();
-
-/* ---------------- MESSAGE LISTENER ---------------- */
-window.addEventListener(
-  "message",
-  async (event) => {
-    if (
-      event.source !== window
-    ) {
-      return;
-    }
-    if (
-      event.data?.type !==
-      "LEET_RETENTION_SUBMISSION"
-    ) {
-      return;
-    }
-    console.log(
-      "Submission captured:",
-      event.data.payload
-    );
-    // TODO:
-    // Update SM-2 scheduling here
-  }
-);
-/* ---------------- CACHE VALIDATION ---------------- */
+  fetchProgressList,fetchProgressSummary,} from "../services/leetcode.js";
+import {initializeRetentionData,} from "../services/sm2.js";
+import { supabase,} from "../services/supabase.js";
+const STORAGE_KEY ="leetcodeData";
 async function shouldRefetch() {
   const storedData =
     await chrome.storage.local.get(
@@ -61,27 +25,43 @@ async function shouldRefetch() {
       cached.lastSubmittedAt
   );
 }
-/* ---------------- DATA SYNC ---------------- */
 async function syncData() {
   try {
     const {
       totalNum,
       questions,
     } = await fetchProgressList();
-    const payload = {
-      totalNum,
-      lastSubmittedAt:
-        questions[0]
-          ?.lastSubmittedAt,
-      questions,
-    };
+    const retentionData =
+      initializeRetentionData(
+        questions
+      );
     await chrome.storage.local.set({
-      [STORAGE_KEY]: payload,
+      [STORAGE_KEY]: {
+        totalNum,
+        lastSubmittedAt:
+          questions[0]
+            ?.lastSubmittedAt,
+        questions,
+      },
     });
+    const {
+      error,
+    } = await supabase
+      .from("problem_retention")
+      .upsert(
+        retentionData,
+        {
+          onConflict:
+            "title_slug",
+        }
+      );
+    if (error) {
+      throw error;
+    }
     console.log(
-      "Fresh data synced"
+      "Retention data synced"
     );
-    return payload;
+    return retentionData;
   } catch (error) {
     console.error(
       "Error syncing data:",
@@ -90,7 +70,6 @@ async function syncData() {
     return null;
   }
 }
-/* ---------------- INITIALIZATION ---------------- */
 async function init() {
   const needsRefetch =
     await shouldRefetch();
@@ -113,5 +92,3 @@ async function init() {
   }
 }
 init();
-
-
