@@ -1,42 +1,71 @@
 {
   "manifest_version": 3,
+
   "name": "LC Retention",
+
   "version": "1.0.0",
+
   "description": "Spaced repetition for LeetCode problems",
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_popup": "src/popup/popup.html",
+
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
   "permissions": [
     "storage",
     "alarms",
     "notifications"
   ],
+
   "host_permissions": [
     "https://leetcode.com/*",
     "https://*.supabase.co/*"
   ],
+
   "background": {
-    "service_worker": "src/background/service-worker.js"
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
   },
+
   "content_scripts": [
     {
-      "matches": ["https://leetcode.com/*"],
-      "js": ["src/content/content.js"],
+      "matches": [
+        "https://leetcode.com/*"
+      ],
+
+      "js": [
+        "src/content/content.js"
+      ],
+
       "run_at": "document_idle"
     }
   ],
-  "action": {
-    "default_popup": "src/popup/popup.html"
 
-  },
   "web_accessible_resources": [
-  {
-    "resources": [
-      "src/content/interceptor.js",
-      "src/popup/review.html",
-      "src/popup/stats.html",
-      "src/popup/stats-popup.html"
-    ],
-    "matches": ["https://leetcode.com/*", "<all_urls>"]
-  }
-]
+    {
+      "resources": [
+        "src/content/interceptor.js",
+        "src/popup/review.html",
+        "src/popup/stats.html",
+        "src/popup/stats-popup.html"
+      ],
+
+      "matches": [
+        "https://leetcode.com/*",
+        "<all_urls>"
+      ]
+    }
+  ]
 }
-
-
