@@ -9,14 +9,15 @@ import {
   createClient,
 } from "@supabase/supabase-js";
 
-const supabase = createClient(
+import {
+  verifyLeetCodeHandle,
+} from "../services/auth.js";
 
+const supabase = createClient(
   import.meta.env
     .VITE_SUPABASE_URL,
-
   import.meta.env
     .VITE_SUPABASE_ANON_KEY
-
 );
 
 function Ticker({
@@ -46,6 +47,21 @@ function Ticker({
 function PopupB() {
 
   const [
+    username,
+    setUsername,
+  ] = useState(null);
+
+  const [
+    verifying,
+    setVerifying,
+  ] = useState(false);
+
+  const [
+    inputValue,
+    setInputValue,
+  ] = useState("");
+
+  const [
     dueProblems,
     setDueProblems,
   ] = useState([]);
@@ -65,6 +81,11 @@ function PopupB() {
     setLoading,
   ] = useState(true);
 
+  const [
+    authChecked,
+    setAuthChecked,
+  ] = useState(false);
+
   const today =
     new Date();
 
@@ -76,6 +97,25 @@ function PopupB() {
     ).padStart(2, "0")}`;
 
   useEffect(() => {
+
+    chrome.storage.local.get(
+      "lc_username",
+      (result) => {
+
+        if (
+          result.lc_username
+        ) {
+
+          setUsername(
+            result.lc_username
+          );
+
+        }
+
+        setAuthChecked(true);
+
+      }
+    );
 
     async function load() {
 
@@ -181,7 +221,50 @@ function PopupB() {
 
   }, []);
 
-  if (loading) {
+  async function handleVerify() {
+
+    if (
+      !inputValue.trim()
+    ) {
+      return;
+    }
+
+    setVerifying(true);
+
+    const verified =
+      await verifyLeetCodeHandle(
+        inputValue.trim()
+      );
+
+    if (verified) {
+
+      await chrome.storage.local.set({
+        lc_username:
+          inputValue.trim(),
+      });
+
+      setUsername(
+        inputValue.trim()
+      );
+
+      setVerifying(false);
+
+    } else {
+
+      setVerifying(false);
+
+      alert(
+        "Verification failed. Try again."
+      );
+
+    }
+
+  }
+
+  if (
+    !authChecked ||
+    loading
+  ) {
 
     return (
       <div
@@ -201,6 +284,187 @@ function PopupB() {
       >
         loading...
       </div>
+    );
+
+  }
+
+  if (!username) {
+
+    return (
+
+      <div
+        style={{
+          width: 360,
+          height: 480,
+          background:
+            "var(--ink-1)",
+          display: "flex",
+          flexDirection:
+            "column",
+          padding: "28px 22px",
+        }}
+      >
+
+        <div
+          style={{
+            fontFamily:
+              "var(--f-mono)",
+            fontSize: 9.5,
+            color:
+              "var(--fg-3)",
+            letterSpacing:
+              "0.14em",
+          }}
+        >
+          LR · SETUP
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            fontFamily:
+              "var(--f-serif)",
+            fontStyle:
+              "italic",
+            fontSize: 32,
+            color:
+              "var(--fg)",
+            lineHeight: 1.1,
+          }}
+        >
+          prove your handle.
+        </div>
+
+        <div
+          style={{
+            marginTop: 12,
+            fontFamily:
+              "var(--f-mono)",
+            fontSize: 11,
+            color:
+              "var(--fg-3)",
+            lineHeight: 1.7,
+          }}
+        >
+          Enter your LeetCode username.
+          Then open the verification
+          problem and submit invalid
+          code to trigger a compile
+          error automatically.
+        </div>
+
+        <input
+          value={inputValue}
+          onChange={(e) =>
+            setInputValue(
+              e.target.value
+            )
+          }
+          placeholder="your-lc-username"
+          style={{
+            marginTop: 20,
+            padding: "11px 12px",
+            background:
+              "var(--ink-2)",
+            border:
+              "1px solid var(--line)",
+            borderRadius: 6,
+            color:
+              "var(--fg)",
+            fontFamily:
+              "var(--f-mono)",
+            fontSize: 12,
+            outline: "none",
+          }}
+        />
+
+        {!verifying ? (
+
+          <button
+            className="btn primary"
+            onClick={handleVerify}
+            style={{
+              marginTop: 14,
+              width: "100%",
+              justifyContent:
+                "center",
+              borderRadius: 999,
+              padding:
+                "12px 14px",
+            }}
+          >
+            start verification →
+          </button>
+
+        ) : (
+
+          <div
+            style={{
+              marginTop: 16,
+            }}
+          >
+
+            <a
+              href="https://leetcode.com/problems/trapping-rain-water-ii/"
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => {
+
+                e.preventDefault();
+
+                chrome.tabs.create({
+                  url:
+                    "https://leetcode.com/problems/trapping-rain-water-ii/",
+                });
+
+              }}
+              style={{
+                display: "block",
+                padding:
+                  "11px 14px",
+                background:
+                  "var(--ink-2)",
+                border:
+                  "1px solid var(--line)",
+                borderRadius: 999,
+                fontFamily:
+                  "var(--f-mono)",
+                fontSize: 11,
+                color:
+                  "var(--fg)",
+                textDecoration:
+                  "none",
+                textAlign:
+                  "center",
+              }}
+            >
+              open verification problem ↗
+            </a>
+
+            <div
+              style={{
+                marginTop: 14,
+                fontFamily:
+                  "var(--f-mono)",
+                fontSize: 10,
+                color:
+                  "var(--fg-3)",
+                textAlign:
+                  "center",
+                lineHeight: 1.6,
+              }}
+            >
+              Submit invalid code and
+              wait for the compile
+              error to be detected.
+            </div>
+
+          </div>
+
+        )}
+
+      </div>
+
     );
 
   }
@@ -415,6 +679,9 @@ function PopupB() {
             width: "100%",
             justifyContent:
               "space-between",
+            display: "flex",
+            alignItems:
+              "center",
             padding:
               "12px 14px",
             borderRadius:
@@ -466,6 +733,8 @@ function PopupB() {
             display: "flex",
             justifyContent:
               "space-between",
+            alignItems:
+              "center",
             fontFamily:
               "var(--f-mono)",
             fontSize: 10,

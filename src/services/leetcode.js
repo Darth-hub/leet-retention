@@ -319,5 +319,85 @@ export async function fetchSubmissionDetails(
     return null;
 
   }
+}
+
+export async function fetchRecentSubmissions(
+  username
+) {
+
+  const query = `
+    query recentSubmissions(
+      $username: String!
+    ) {
+
+      recentSubmissionList(
+        username: $username
+      ) {
+
+        id
+        title
+        titleSlug
+        statusDisplay
+        lang
+        timestamp
+
+      }
+    }
+  `;
+
+  try {
+
+    const response = await fetch(
+      LEETCODE_API,
+      {
+
+        method: "POST",
+
+        headers: getHeaders(),
+
+        credentials: "include",
+
+        body: JSON.stringify({
+
+          operationName:
+            "recentSubmissions",
+
+          query,
+
+          variables: {
+            username,
+          },
+
+        }),
+
+      }
+    );
+
+    if (!response.ok) {
+
+      throw new Error(
+        "Failed to fetch recent submissions"
+      );
+
+    }
+
+    const data =
+      await response.json();
+
+    return (
+      data.data
+        ?.recentSubmissionList || []
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Error fetching recent submissions:",
+      error
+    );
+
+    return [];
+
+  }
 
 }
