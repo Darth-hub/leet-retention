@@ -1,5 +1,3 @@
-
-jsx
 import React, {
   useState,
   useEffect,
@@ -239,19 +237,44 @@ function StatsTabB() {
     setRetention,
   ] = useState(0);
 
-  const [
-    topicRetention,
-    setTopicRetention,
-  ] = useState([]);
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  const [topicRetention,setTopicRetention,] = useState([]);
+  const [reviewDayCount, setReviewDayCount] = useState({});
+  const [streak, setStreak] = useState(0);
+  const [loading, setLoading,] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
+        const {
+          data: reviews
+        } = await supabase
+        .from("review_history")
+        .select("reviewed_at")
+        .order("reviewed_at", { ascending: false });
+        let streak = 0;
+        if (reviews && reviews.length > 0) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const reviewDays = new Set(
+            reviews.map(r => new Date(r.reviewed_at).toDateString())
+          );
+          for (let i = 0; i < 365; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+          if (reviewDays.has(d.toDateString())) {
+            streak++;
+          } else if (i > 0) {
+            break;
+            }
+          }
+        } 
+setStreak(streak);
+const reviewDayCount = {};
+(reviews || []).forEach(r => {
+  const d = new Date(r.reviewed_at).toDateString();
+  reviewDayCount[d] = (reviewDayCount[d] || 0) + 1;
+});
+setReviewDayCount(reviewDayCount);
         const {
           data: allProblems,
           count,
@@ -418,26 +441,17 @@ function StatsTabB() {
             )
         ),
       }));
-
-  const heatmap = Array.from(
-    { length: 12 },
-    (_, w) =>
-      Array.from(
-        { length: 7 },
-        (_, d) => {
-          const seed =
-            w * 7 + d;
-
-          return (
-            (Math.sin(
-              seed * 0.7
-            ) +
-              1) /
-            2
-          );
-        }
-      )
-  );
+      // build heatmap from real review_history
+const heatmapData = Array.from({ length: 12 }, (_, w) =>
+  Array.from({ length: 7 }, (_, d) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (11 - w) * 7 - (6 - d));
+    date.setHours(0, 0, 0, 0);
+    const dateStr = date.toDateString();
+    const count = reviewDayCount[dateStr] || 0;
+    return Math.min(count / 5, 1); // normalize: 5+ reviews = full intensity
+  })
+);
 
   return (
     <div
@@ -552,7 +566,7 @@ function StatsTabB() {
           flex: 1,
           display: "grid",
           gridTemplateColumns:
-            "1fr 380px",
+            "minmax(0, 1fr) minmax(300px, 380px)",
           gap: 0,
         }}
       >
@@ -589,7 +603,7 @@ function StatsTabB() {
               },
               {
                 lab: "review streak",
-                val: 12,
+                val: streak,
                 unit: "days",
               },
             ].map((s, i) => (
@@ -702,7 +716,7 @@ function StatsTabB() {
                 gap: 4,
               }}
             >
-              {heatmap.map(
+              {heatmapData.map(
                 (wk, wi) => (
                   <div
                     key={wi}
@@ -724,7 +738,7 @@ function StatsTabB() {
                             background:
                               v < 0.1
                                 ? "var(--ink-2)"
-                                : `oklch(${0.22 + v * 0.55} 0.01 75)`,
+                                : `oklch(${0.45 + v * 0.35} 0.18 142)`,
                             border:
                               "1px solid var(--line-d)",
                           }}

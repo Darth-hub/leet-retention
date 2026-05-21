@@ -98,6 +98,7 @@ function ReviewB() {
       <div style={{ fontFamily: 'var(--f-mono)', fontSize: 11, color: 'var(--fg-3)' }}>see you tomorrow.</div>
     </div>
   );
+  if (!problems[index]) return null;
 
   const problem = problems[index];
   const tags = problem.topic_tags || [];

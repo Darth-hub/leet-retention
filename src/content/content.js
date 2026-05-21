@@ -6,6 +6,8 @@ import {
 
 import {
   initializeRetentionData,
+  computeInitialS,
+  computeNextReviewDate,
 } from "../services/sm2.js";
 
 import {
@@ -29,10 +31,6 @@ async function startTimer(slug) {
 
   });
 
-  console.log(
-    `Started timer for ${slug}`
-  );
-
 }
 
 async function stopTimer(slug) {
@@ -49,10 +47,6 @@ async function stopTimer(slug) {
     !timer ||
     timer.slug !== slug
   ) {
-
-    console.log(
-      "No active timer found"
-    );
 
     return null;
 
@@ -71,11 +65,32 @@ async function stopTimer(slug) {
     TIMER_KEY
   );
 
-  console.log(
-    `Solved ${slug} in ${solvingTime} seconds`
-  );
-
   return solvingTime;
+
+}
+
+function sendMessageWithRetry(message) {
+
+  chrome.runtime.sendMessage(
+    message,
+    () => {
+
+      if (
+        chrome.runtime.lastError
+      ) {
+
+        setTimeout(() => {
+
+          chrome.runtime.sendMessage(
+            message
+          );
+
+        }, 1000);
+
+      }
+
+    }
+  );
 
 }
 
@@ -158,10 +173,6 @@ async function syncData() {
       throw error;
     }
 
-    console.log(
-      "Retention data synced"
-    );
-
     return retentionData;
 
   } catch (error) {
@@ -177,61 +188,61 @@ async function syncData() {
 
 }
 
-async function handleSubmissionPage(
-  slug,
-  submissionId
-) {
-
+async function handleSubmissionPage(slug, submissionId) {
   try {
+    const submission = await fetchSubmissionDetails(submissionId);
+    if (!submission) return;
 
-    const submission =
-      await fetchSubmissionDetails(
-        submissionId
+    const solvingTime = await stopTimer(slug);
+
+    if (submission.statusCode !== 10) return;
+
+    const { data: existing } = await supabase
+      .from("problem_retention")
+      .select("stability, num_submitted")
+      .eq("question_id", submission.question.titleSlug)
+      .single();
+
+    const numSubmitted = (existing?.num_submitted ?? 0) + 1;
+    const difficulty = "Medium";
+    const initialS = computeInitialS(numSubmitted, difficulty);
+    const nextReviewDate = computeNextReviewDate(initialS);
+
+    const { error } = await supabase
+      .from("problem_retention")
+      .upsert(
+        {
+          question_id: submission.question.titleSlug,
+          title_slug: submission.question.titleSlug,
+          stability: initialS,
+          next_review_at: nextReviewDate.toISOString(),
+          num_submitted: numSubmitted,
+          review_count: 0,
+          topic_tags: submission.topicTags,
+          last_submitted_at: new Date(submission.timestamp * 1000).toISOString(),
+          difficulty,
+        },
+        { onConflict: "title_slug" }
       );
 
-    if (!submission) {
-      return;
-    }
-
-    const solvingTime =
-      await stopTimer(slug);
-
-    console.log(
-      "Submission detected:",
-      {
-        slug,
-        submissionId,
-        solvingTime,
-      }
-    );
-
-    chrome.runtime.sendMessage({
-
-      type:
-        "NEW_SUBMISSION",
-
-      payload: {
-        ...submission,
-        solvingTime,
-      },
-
+    sendMessageWithRetry({
+      type: "NEW_SUBMISSION",
+      payload: { ...submission, solvingTime },
     });
 
   } catch (error) {
-
-    console.error(
-      "Error handling submission:",
-      error
+    console.error("Error handling submission:", error);
+  }
+}
+  
+async function init() {
+  const problemMatch =
+    window.location.pathname.match(
+      /^\/problems\/([^/]+)\/?(?:description\/?)?$/
     );
 
-  }
-
-}
-
-async function init() {
-console.log("pathname:", window.location.pathname);
-const problemMatch = window.location.pathname.match( /^\/problems\/([^/]+)\/?(?:description\/?)?$/);
   if (problemMatch) {
+
     const slug =
       problemMatch[1];
 
@@ -266,26 +277,7 @@ const problemMatch = window.location.pathname.match( /^\/problems\/([^/]+)\/?(?:
 
   if (needsRefetch) {
 
-    console.log(
-      "Fetching fresh data..."
-    );
-
     await syncData();
-
-  } else {
-
-    console.log(
-      "Using cached data"
-    );
-
-    const storedData =
-      await chrome.storage.local.get(
-        STORAGE_KEY
-      );
-
-    console.log(
-      storedData[STORAGE_KEY]
-    );
 
   }
 

@@ -65,6 +65,16 @@ function PopupB() {
     setLoading,
   ] = useState(true);
 
+  const today =
+    new Date();
+
+  const dateStr =
+    `${String(
+      today.getMonth() + 1
+    ).padStart(2, "0")}·${String(
+      today.getDate()
+    ).padStart(2, "0")}`;
+
   useEffect(() => {
 
     async function load() {
@@ -225,7 +235,7 @@ function PopupB() {
             "0.14em",
         }}
       >
-        LR · 05·21
+        LR · {dateStr}
       </div>
 
       <div
@@ -391,51 +401,49 @@ function PopupB() {
         }}
       >
 
-        <a
-          href="review.html"
+        <button
+          className="btn primary"
+          onClick={() =>
+            chrome.tabs.create({
+              url:
+                chrome.runtime.getURL(
+                  "src/popup/review.html"
+                ),
+            })
+          }
           style={{
-            textDecoration:
-              "none",
+            width: "100%",
+            justifyContent:
+              "space-between",
+            padding:
+              "12px 14px",
+            borderRadius:
+              999,
+            fontFamily:
+              "var(--f-display)",
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: 0,
           }}
         >
 
-          <button
-            className="btn primary"
+          <span>
+            start review
+          </span>
+
+          <span
             style={{
-              width: "100%",
-              justifyContent:
-                "space-between",
-              padding:
-                "12px 14px",
-              borderRadius:
-                999,
               fontFamily:
-                "var(--f-display)",
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: 0,
+                "var(--f-serif)",
+              fontStyle:
+                "italic",
+              fontSize: 16,
             }}
           >
+            let's go →
+          </span>
 
-            <span>
-              start review
-            </span>
-
-            <span
-              style={{
-                fontFamily:
-                  "var(--f-serif)",
-                fontStyle:
-                  "italic",
-                fontSize: 16,
-              }}
-            >
-              let&apos;s go →
-            </span>
-
-          </button>
-
-        </a>
+        </button>
 
       </div>
 
@@ -495,20 +503,24 @@ function PopupB() {
             {totalSolved} solved
           </span>
 
-          <a
-            href="stats.html"
-            target="_blank"
+          <span
+            onClick={() =>
+              chrome.tabs.create({
+                url:
+                  chrome.runtime.getURL(
+                    "src/popup/stats.html"
+                  ),
+              })
+            }
             style={{
               color:
                 "var(--fg-1)",
               cursor:
                 "pointer",
-              textDecoration:
-                "none",
             }}
           >
             stats →
-          </a>
+          </span>
 
         </div>
 

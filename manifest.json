@@ -19,7 +19,7 @@
     {
       "matches": ["https://leetcode.com/*"],
       "js": ["src/content/content.js"],
-      "run_at": "document_start"
+      "run_at": "document_idle"
     }
   ],
   "action": {
@@ -28,8 +28,15 @@
   },
   "web_accessible_resources": [
   {
-    "resources": ["src/content/interceptor.js"],
-    "matches": ["https://leetcode.com/*"]
+    "resources": [
+      "src/content/interceptor.js",
+      "src/popup/review.html",
+      "src/popup/stats.html",
+      "src/popup/stats-popup.html"
+    ],
+    "matches": ["https://leetcode.com/*", "<all_urls>"]
   }
 ]
 }
+
+
