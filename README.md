@@ -218,6 +218,12 @@ npm install
 Create a new Supabase project and run the following SQL to create the required tables:
 
 ```sql
+CREATE TABLE users (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  leetcode_username text,
+  created_at timestamptz DEFAULT now()
+);
+
 CREATE TABLE problem_retention (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id uuid,
